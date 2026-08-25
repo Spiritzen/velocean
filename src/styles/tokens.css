@@ -1,0 +1,79 @@
+:root {
+  /* Palette validée */
+  --color-navy-950: #031c2b;
+  --color-ocean-600: #087fbd;
+  --color-cyan-400: #43c5e8;
+  --color-foam-50: #f5fbff;
+  --color-abyss-1000: #03080c;
+  --color-bike-500: #8fd14f;
+
+  /* Texte et surfaces */
+  --color-text-primary: var(--color-foam-50);
+  --color-text-muted: #a9c7d6;
+  --color-surface-base: var(--color-navy-950);
+  --color-surface-raised: #062a3f;
+  --color-border: #0d3a52;
+
+  /* Espaces */
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.5rem;
+  --space-2xl: 4rem;
+
+  /* Rayons */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 999px;
+
+  /* Ombres */
+  --shadow-sm: 0 1px 2px rgba(3, 8, 12, 0.4);
+  --shadow-md: 0 4px 16px rgba(3, 8, 12, 0.45);
+  --shadow-lg: 0 12px 32px rgba(3, 8, 12, 0.5);
+
+  /* Layout */
+  --content-max-width: 1200px;
+  --tap-target-min: 44px;
+  --header-offset: 88px;
+
+  /* Polices */
+  /* Barlow Condensed Variable n'existe pas chez Fontsource (police source non variable) : */
+  /* fallback assumé sur le paquet statique @fontsource/barlow-condensed. */
+  --font-heading: 'Barlow Condensed', sans-serif;
+  --font-body: 'DM Sans Variable', sans-serif;
+
+  /* Transitions */
+  --transition-fast: 120ms ease;
+  --transition-normal: 220ms ease;
+  --transition-slow: 400ms ease;
+
+  /* Palette dédiée — section éditoriale 3D « Le mouvement comme terrain
+     commun » (WheelJourneySection). Volontairement distincte de la palette
+     validée ci-dessus : ne pas réutiliser pour le hero ou le header. */
+  --wj-color-abysses: #04151f;
+  --wj-color-marine: #082b3d;
+  --wj-color-ocean: #0d5c78;
+  --wj-color-vivant: #258fc4;
+  --wj-color-ecume: #eaf3f3;
+  --wj-color-blanc-casse: #f7faf9;
+  --wj-color-brume: #b8cdd2;
+  --wj-color-vert-velo: #66b56a;
+  --wj-color-encre: #071820;
+
+  /* Palette dédiée — sections métier du site (vélo, plongée, nautisme,
+     permis bateau, avis, contact, footer). Distincte des palettes hero/
+     header et WheelJourneySection ci-dessus : ne pas les réutiliser. */
+  --site-navy-950: #031722;
+  --site-navy-900: #062634;
+  --site-navy-800: #083849;
+  --site-ocean-700: #08627a;
+  --site-ocean-500: #1599b8;
+  --site-sky-200: #dcecf1;
+  --site-foam-100: #f3f8f8;
+  --site-sea-green: #79cc88;
+  --site-ink: #071d27;
+  --site-white: #f8fbfc;
+}

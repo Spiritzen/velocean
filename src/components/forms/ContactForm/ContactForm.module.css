@@ -1,0 +1,80 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  width: 100%;
+  max-width: 34rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.label {
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  color: var(--site-navy-900);
+}
+
+.input,
+.textarea {
+  min-height: var(--tap-target-min);
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--site-navy-800);
+  border-radius: var(--radius-sm);
+  background-color: var(--site-white);
+  color: var(--site-ink);
+  font-size: 1rem;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 8rem;
+}
+
+/* Le contour rouge n'apparaît qu'après interaction (blur) ou tentative
+   d'envoi (voir data-touched posé par ContactForm.tsx) — jamais dès le
+   chargement de la page sur des champs vides que le visiteur n'a pas
+   encore pu remplir. */
+.input[data-touched='true']:invalid,
+.textarea[data-touched='true']:invalid {
+  border-color: #b3261e;
+}
+
+.help {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--site-navy-800);
+  opacity: 0.85;
+}
+
+.submit {
+  align-self: flex-start;
+  min-height: var(--tap-target-min);
+  padding-inline: clamp(1.75rem, 3vw, 2.25rem);
+  border: none;
+  border-radius: var(--radius-full);
+  background-color: var(--site-ink);
+  color: var(--site-white);
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-size: 1rem;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.submit:hover,
+.submit:focus-visible {
+  background-color: var(--site-navy-900);
+  transform: translateY(-2px);
+}

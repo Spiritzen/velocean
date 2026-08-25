@@ -1,0 +1,167 @@
+/* ==========================================================================
+   TestimonialsSection — avis clients, rythme repris de La Vraie Baguette :
+   entrée alternée gauche/droite, étoiles en cascade, animation rejouable à
+   chaque entrée/sortie du viewport.
+   ========================================================================== */
+
+.section {
+  position: relative;
+  width: 100%;
+  /* Les cartes sont décalées horizontalement (translateX) avant leur
+     révélation ; en une colonne pleine largeur (mobile), ce décalage sort
+     du viewport et provoquerait un scroll horizontal sans ce confinement
+     local — purement visuel, n'affecte pas l'animation elle-même. */
+  overflow-x: hidden;
+  background: linear-gradient(180deg, var(--site-navy-950) 0%, var(--site-ink) 100%);
+  color: var(--site-white);
+  padding-block: clamp(4rem, 10vw, 8rem);
+  padding-inline: clamp(1.25rem, 5vw, 3rem);
+  clip-path: polygon(0 1.1vw, 100% 0, 100% 100%, 0 100%);
+}
+
+.inner {
+  max-width: 1520px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.eyebrow {
+  margin: 0 0 var(--space-xs);
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-weight: 600;
+  font-size: clamp(0.85rem, 0.3vw + 0.75rem, 0.95rem);
+  letter-spacing: 0.16em;
+  color: var(--site-ocean-500);
+}
+
+.title {
+  margin: 0 auto var(--space-md);
+  max-width: 20ch;
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-weight: 700;
+  font-size: clamp(2.2rem, 4vw, 3.6rem);
+  line-height: 1.04;
+  text-wrap: balance;
+}
+
+.intro {
+  margin: 0 auto clamp(2.5rem, 6vw, 4rem);
+  max-width: 58ch;
+  font-size: clamp(1rem, 0.2vw + 0.95rem, 1.15rem);
+  color: var(--site-sky-200);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(1.5rem, 3vw, 2rem);
+  text-align: left;
+}
+
+@media (min-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+    align-items: start;
+  }
+}
+
+.card {
+  padding: clamp(1.75rem, 3vw, 2.25rem);
+  border-radius: var(--radius-md);
+  background-color: rgba(248, 251, 252, 0.05);
+  border: 1px solid rgba(248, 251, 252, 0.1);
+}
+
+.card[data-motion='full'] {
+  opacity: 0;
+  filter: blur(12px);
+}
+
+.card[data-motion='full'][data-direction='left'] {
+  transform: translateX(-36px);
+}
+
+.card[data-motion='full'][data-direction='right'] {
+  transform: translateX(36px);
+}
+
+.card[data-motion='full'][data-state='revealed'] {
+  opacity: 1;
+  transform: translateX(0);
+  filter: blur(0);
+  transition:
+    opacity 650ms ease,
+    transform 650ms ease,
+    filter 650ms ease;
+}
+
+.stars {
+  display: inline-flex;
+  gap: 0.2rem;
+  margin-block-end: var(--space-md);
+  color: var(--site-sea-green);
+}
+
+.star {
+  width: 1.1em;
+  height: 1.1em;
+}
+
+.card[data-motion='full'] .star {
+  transform: scale(1.5);
+  opacity: 0.7;
+}
+
+.card[data-motion='full'][data-state='revealed'] .star {
+  animation: testimonial-star-pop 380ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+  animation-delay: calc(650ms + var(--star-index) * 95ms);
+}
+
+@keyframes testimonial-star-pop {
+  from {
+    transform: scale(1.5);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.text {
+  margin: 0 0 var(--space-md);
+  font-size: clamp(1rem, 0.2vw + 0.95rem, 1.1rem);
+  line-height: 1.6;
+  color: var(--site-sky-200);
+}
+
+.author {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.context {
+  font-family: var(--font-body);
+  font-style: normal;
+  font-weight: 400;
+  font-size: 0.85rem;
+  letter-spacing: normal;
+  color: var(--site-sky-200);
+  opacity: 0.75;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .star {
+    transition: none !important;
+    animation: none !important;
+  }
+}

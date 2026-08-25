@@ -1,0 +1,428 @@
+.header {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: 50;
+  padding-block: clamp(0.75rem, 2vw, 1.25rem);
+  padding-inline: clamp(1rem, 4vw, 2.5rem);
+  padding-inline-start: max(clamp(1rem, 4vw, 2.5rem), env(safe-area-inset-left));
+  padding-inline-end: max(clamp(1rem, 4vw, 2.5rem), env(safe-area-inset-right));
+  background-color: transparent;
+  border-bottom: 1px solid transparent;
+  transition:
+    background-color var(--transition-normal),
+    border-color var(--transition-normal),
+    backdrop-filter var(--transition-normal);
+}
+
+/* Le fond assombri au scroll protège la lisibilité des liens de nav
+   desktop contre la vidéo derrière eux. En mobile, il n'y a pas de liens
+   dans le header (le bouton Menu a déjà son propre fond plein, opaque) :
+   cette barre y serait purement décorative et inutile — réservée au
+   desktop, au même seuil que la nav desktop elle-même. */
+@media (min-width: 769px) {
+  .header[data-scrolled='true'] {
+    background-color: rgba(3, 28, 43, 0.86);
+    border-bottom-color: rgba(67, 197, 232, 0.25);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .header[data-scrolled='true'] {
+      background-color: var(--color-navy-950);
+    }
+  }
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: var(--content-max-width);
+  margin-inline: auto;
+}
+
+/* ---------- Navigation desktop ---------- */
+
+.desktopNav {
+  display: none;
+}
+
+.navList {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.85rem, 1.6vw, 1.75rem);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  --nav-stagger: 110ms;
+  --nav-duration: 560ms;
+  --nav-impact-offset: 300ms;
+  --nav-impact-duration: 220ms;
+}
+
+.navItem {
+  --nav-delay: calc(var(--nav-index, 0) * var(--nav-stagger));
+}
+
+.navLink {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-target-min);
+  padding-inline: 0.2rem;
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-weight: 600;
+  font-size: clamp(0.95rem, 1vw + 0.7rem, 1.15rem);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--color-navy-950);
+  opacity: 0;
+  --impact-color: var(--color-cyan-400);
+}
+
+.header[data-scrolled='true'] .navLink {
+  color: var(--color-foam-50);
+}
+
+.navItem[data-nav-key='velo'] .navLink {
+  --impact-color: var(--color-bike-500);
+}
+
+.desktopNav[data-state='hidden'] .navLink {
+  pointer-events: none;
+}
+
+.navLink::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.4em;
+  height: 2px;
+  background-color: var(--impact-color);
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.navLink:hover,
+.navLink:focus-visible {
+  color: var(--color-ocean-600);
+}
+
+.header[data-scrolled='true'] .navLink:hover,
+.header[data-scrolled='true'] .navLink:focus-visible {
+  color: var(--color-cyan-400);
+}
+
+.navItem[data-nav-key='velo'] .navLink:hover,
+.navItem[data-nav-key='velo'] .navLink:focus-visible {
+  color: var(--color-bike-500);
+}
+
+@media (min-width: 769px) {
+  .desktopNav {
+    display: block;
+  }
+}
+
+/* Taille desktop raisonnable : la valeur précédente (~26–28px) avait été
+   doublée à tort en jugeant un rendu affiché à 90% de zoom. À 100% et
+   1920px, cette échelle vise ~16 à 18px — proche de la valeur d'origine —
+   tout en gardant une cible cliquable ≥ 44px via `min-height` ci-dessus. */
+@media (min-width: 769px) {
+  .navLink {
+    font-size: clamp(1rem, 0.35vw + 0.75rem, 1.125rem);
+  }
+}
+
+/* ---------- Animation « arrivée — freinage — impact » ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  .desktopNav[data-state='revealed'] .navLink {
+    animation: nav-item-arrival var(--nav-duration) both;
+    animation-delay: var(--nav-delay);
+    will-change: transform, filter, opacity;
+  }
+
+  .desktopNav[data-state='revealed'] .navLink::after {
+    animation: nav-impact-trait var(--nav-impact-duration) both;
+    animation-delay: calc(var(--nav-delay) + var(--nav-impact-offset));
+  }
+}
+
+@keyframes nav-item-arrival {
+  0% {
+    opacity: 0;
+    transform: translate3d(96px, -14px, 0) skewX(-12deg) scale(0.92);
+    filter: blur(12px);
+    animation-timing-function: cubic-bezier(0.11, 0.82, 0.18, 1);
+  }
+  52% {
+    opacity: 1;
+    transform: translate3d(-7px, 1px, 0) skewX(3deg) scale(1.085);
+    filter: blur(0);
+    animation-timing-function: cubic-bezier(0.32, 0, 0.6, 1);
+  }
+  70% {
+    transform: translate3d(2px, 0, 0) skewX(-1deg) scale(0.97);
+    animation-timing-function: ease-out;
+  }
+  85% {
+    transform: translate3d(-1px, 0, 0) scale(1.015);
+    animation-timing-function: ease-out;
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) skewX(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes nav-impact-trait {
+  0% {
+    opacity: 0.85;
+    transform: scaleX(0.15);
+  }
+  35% {
+    opacity: 0.6;
+    transform: scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navLink,
+  .navLink::after,
+  .menuToggle {
+    animation: none !important;
+  }
+
+  .navLink {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  .navLink::after {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+
+  .menuToggle {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* ---------- Bouton menu mobile ---------- */
+
+.menuToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: var(--tap-target-min);
+  min-width: var(--tap-target-min);
+  padding-inline: 0.9rem;
+  margin-inline-start: auto;
+  border: 1px solid var(--color-navy-950);
+  border-radius: var(--radius-full);
+  background-color: var(--color-foam-50);
+  color: var(--color-navy-950);
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: clamp(0.85rem, 1vw + 0.6rem, 1rem);
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Placé après la règle de base : à spécificité égale, l'ordre du fichier
+   tranche la cascade, donc ce masquage doit rester déclaré après
+   `.menuToggle` pour effectivement l'emporter à partir de 769px. */
+@media (min-width: 769px) {
+  .menuToggle {
+    display: none;
+  }
+}
+
+.menuToggle[data-state='hidden'] {
+  pointer-events: none;
+}
+
+.header[data-scrolled='true'] .menuToggle {
+  background-color: var(--color-navy-950);
+  color: var(--color-foam-50);
+  border-color: rgba(67, 197, 232, 0.4);
+}
+
+.menuToggle:hover,
+.menuToggle:focus-visible {
+  border-color: var(--color-ocean-600);
+  color: var(--color-ocean-600);
+}
+
+.header[data-scrolled='true'] .menuToggle:hover,
+.header[data-scrolled='true'] .menuToggle:focus-visible {
+  color: var(--color-cyan-400);
+  border-color: var(--color-cyan-400);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .menuToggle[data-state='revealed'] {
+    animation: menu-toggle-arrival 480ms both;
+    animation-delay: 60ms;
+  }
+}
+
+@keyframes menu-toggle-arrival {
+  0% {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.92);
+    filter: blur(6px);
+    animation-timing-function: cubic-bezier(0.16, 0.9, 0.2, 1);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(2px) scale(1.05);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.menuIcon {
+  width: 1.15em;
+  height: 1.15em;
+}
+
+/* ---------- Panneau mobile ---------- */
+
+.mobilePanel {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding: clamp(1.25rem, 6vw, 2.5rem);
+  padding-block-start: max(clamp(1.25rem, 6vw, 2.5rem), env(safe-area-inset-top));
+  background-color: var(--color-navy-950);
+  color: var(--color-foam-50);
+  transform: translateX(100%);
+  transition: transform var(--transition-normal);
+  visibility: hidden;
+}
+
+.mobilePanel[data-open='true'] {
+  transform: translateX(0);
+  visibility: visible;
+}
+
+@media (min-width: 769px) {
+  .mobilePanel {
+    display: none;
+  }
+}
+
+.closeButton {
+  align-self: flex-end;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-target-min);
+  height: var(--tap-target-min);
+  border: 1px solid rgba(245, 251, 255, 0.35);
+  border-radius: var(--radius-full);
+  background-color: transparent;
+  color: var(--color-foam-50);
+  cursor: pointer;
+}
+
+.closeButton:hover,
+.closeButton:focus-visible {
+  border-color: var(--color-cyan-400);
+  color: var(--color-cyan-400);
+}
+
+.mobileList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.mobileLink {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap-target-min);
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-weight: 600;
+  font-size: clamp(1.5rem, 4vw + 1rem, 2.25rem);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--color-foam-50);
+}
+
+.mobileLink:hover,
+.mobileLink:focus-visible {
+  color: var(--color-cyan-400);
+}
+
+.mobileList li[data-nav-key='velo'] .mobileLink:hover,
+.mobileList li[data-nav-key='velo'] .mobileLink:focus-visible {
+  color: var(--color-bike-500);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .mobilePanel[data-open='true'] .mobileList li {
+    animation: mobile-link-in 320ms both;
+  }
+
+  .mobilePanel[data-open='true'] .mobileList li:nth-child(1) {
+    animation-delay: 60ms;
+  }
+  .mobilePanel[data-open='true'] .mobileList li:nth-child(2) {
+    animation-delay: 120ms;
+  }
+  .mobilePanel[data-open='true'] .mobileList li:nth-child(3) {
+    animation-delay: 180ms;
+  }
+  .mobilePanel[data-open='true'] .mobileList li:nth-child(4) {
+    animation-delay: 240ms;
+  }
+  .mobilePanel[data-open='true'] .mobileList li:nth-child(5) {
+    animation-delay: 300ms;
+  }
+  .mobilePanel[data-open='true'] .mobileList li:nth-child(6) {
+    animation-delay: 360ms;
+  }
+}
+
+@keyframes mobile-link-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

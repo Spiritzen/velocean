@@ -1,0 +1,430 @@
+/* ==========================================================================
+   WheelJourneySection — moment éditorial 3D « A → B » autonome et rapide.
+   Palette dédiée (--wj-color-*, voir tokens.css) : jamais la palette hero.
+   ========================================================================== */
+
+.section {
+  position: relative;
+  width: 100%;
+  min-height: 145svh;
+  background-color: var(--wj-color-abysses);
+  /* Ancre de nav (#notre-passion) : évite que le header sticky ne masque le
+     haut de la scène lors d'un scroll natif vers cet id. N'affecte que le
+     comportement de scrollIntoView/ancre — aucun effet sur la mise en page
+     ni sur les calculs de progression (getBoundingClientRect au repos). */
+  scroll-margin-top: var(--header-offset);
+}
+
+/* `overflow: hidden` doit rester ici, sur l'élément sticky lui-même, et non
+   sur `.section` : un ancêtre avec overflow non-visible devient le
+   confinement du sticky (il ne défile jamais tout seul), ce qui neutralise
+   silencieusement `position: sticky`. */
+.scene {
+  position: sticky;
+  top: 0;
+  min-height: 100svh;
+  width: 100%;
+  overflow: hidden;
+  isolation: isolate;
+  /* Composition éditoriale : ligne de trajectoire + graduations techniques,
+     halo local derrière chaque position de repos, respiration claire à
+     gauche puis profonde à droite, transition écume → abysses structurée
+     (plusieurs paliers, pas un dégradé uniforme). Les mots fantômes ROUTE /
+     ABYSSES sont posés en ::before/::after ci-dessous (densité éditoriale
+     sobre, 3–4 % d'opacité, jamais un aplat décoratif). */
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1000' height='300' viewBox='0 0 1000 300'%3E%3Cline x1='40' y1='150' x2='960' y2='150' stroke='%2366B56A' stroke-width='1' stroke-opacity='0.16'/%3E%3Cline x1='120' y1='138' x2='120' y2='162' stroke='%2366B56A' stroke-width='1' stroke-opacity='0.16'/%3E%3Cline x1='260' y1='138' x2='260' y2='162' stroke='%2366B56A' stroke-width='1' stroke-opacity='0.16'/%3E%3Cline x1='400' y1='138' x2='400' y2='162' stroke='%2366B56A' stroke-width='1' stroke-opacity='0.16'/%3E%3Cline x1='500' y1='128' x2='500' y2='172' stroke='%2366B56A' stroke-width='1.4' stroke-opacity='0.2'/%3E%3Cline x1='600' y1='138' x2='600' y2='162' stroke='%2366B56A' stroke-width='1' stroke-opacity='0.16'/%3E%3Cline x1='740' y1='138' x2='740' y2='162' stroke='%2366B56A' stroke-width='1' stroke-opacity='0.16'/%3E%3Cline x1='880' y1='138' x2='880' y2='162' stroke='%2366B56A' stroke-width='1' stroke-opacity='0.16'/%3E%3Ccircle cx='40' cy='150' r='4' fill='none' stroke='%2366B56A' stroke-width='1' stroke-opacity='0.2'/%3E%3Ccircle cx='960' cy='150' r='4' fill='none' stroke='%2366B56A' stroke-width='1' stroke-opacity='0.2'/%3E%3C/svg%3E"),
+    radial-gradient(36% 30% at 20% 46%, rgba(234, 243, 243, 0.24), transparent 72%),
+    radial-gradient(36% 30% at 80% 56%, rgba(37, 143, 196, 0.18), transparent 72%),
+    radial-gradient(120% 90% at 22% 14%, rgba(234, 243, 243, 0.3), transparent 60%),
+    radial-gradient(90% 70% at 84% 92%, rgba(4, 21, 31, 0.4), transparent 65%),
+    linear-gradient(
+      158deg,
+      var(--wj-color-blanc-casse) 0%,
+      var(--wj-color-ecume) 18%,
+      var(--wj-color-ocean) 48%,
+      var(--wj-color-marine) 76%,
+      var(--wj-color-abysses) 100%
+    );
+  background-repeat: no-repeat;
+  background-size:
+    82% auto,
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    100% 100%;
+  background-position:
+    center 54%,
+    center,
+    center,
+    center,
+    center,
+    center;
+}
+
+/* Mots fantômes très sobres (2–5 % d'opacité) : ROUTE dans la zone claire
+   (état A), ABYSSES dans la zone profonde (état B). Purement décoratif —
+   `content` généré en CSS, hors de l'arbre d'accessibilité. */
+.scene::before,
+.scene::after {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.scene::before {
+  content: 'ROUTE';
+  top: 8%;
+  left: 3%;
+  font-size: clamp(4rem, 15vw, 12rem);
+  color: var(--wj-color-encre);
+  opacity: 0.035;
+}
+
+.scene::after {
+  content: 'ABYSSES';
+  bottom: 5%;
+  right: 2%;
+  font-size: clamp(3.25rem, 13vw, 10rem);
+  color: var(--wj-color-ecume);
+  opacity: 0.04;
+}
+
+/* Halo dynamique au centre : suit l'effet d'approche (proximity), très
+   discret, jamais de bloom. */
+.approachHalo {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  margin: auto;
+  width: min(60vw, 620px);
+  height: min(60vw, 620px);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(223, 241, 251, 0.5), transparent 72%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* La roue (canvas) est autorisée à passer devant les textes pendant la
+   traversée — voulu, donne de la profondeur — donc au-dessus dans l'ordre
+   d'empilement ; `pointer-events: none` l'empêche de jamais intercepter un
+   geste destiné à la page. */
+.canvasLayer {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  pointer-events: none;
+}
+
+.canvasLayer canvas {
+  display: block;
+}
+
+/* `transform` reste la propriété exclusive de la révélation pilotée par
+   journeyPhase (voir textReveal.ts) : le centrage/l'alignement des blocs se
+   fait uniquement via left/right/margin, jamais via translateX, pour ne
+   jamais entrer en conflit avec les styles inline appliqués en JS.
+   Couleurs pilotées par variable, redéfinies par bloc ci-dessous : le
+   bloc 1 (état A) est posé sur la portion claire du décor, le bloc 2
+   (état B) sur sa portion sombre. */
+.block {
+  position: absolute;
+  z-index: 2;
+  max-width: min(30rem, 84vw);
+  padding: var(--space-lg);
+  --block-heading-color: var(--wj-color-blanc-casse);
+  --block-body-color: var(--wj-color-brume);
+  --block-eyebrow-color: var(--wj-color-vivant);
+  --block-signature-color: var(--wj-color-vert-velo);
+  color: var(--block-heading-color);
+}
+
+/* Bloc 1 (état A) : posé sur la portion claire (écume/blanc cassé) du
+   décor, texte foncé pour un contraste WCAG AA correct. */
+.block1 {
+  --block-heading-color: var(--wj-color-encre);
+  --block-body-color: var(--wj-color-marine);
+  --block-eyebrow-color: var(--wj-color-ocean);
+}
+
+.eyebrow {
+  margin: 0 0 var(--space-xs);
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-weight: 600;
+  font-size: clamp(0.8rem, 0.4vw + 0.7rem, 0.95rem);
+  letter-spacing: 0.14em;
+  color: var(--block-eyebrow-color);
+}
+
+.title {
+  margin: 0 0 var(--space-md);
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-weight: 700;
+  font-size: clamp(1.9rem, 5vw + 1rem, 2.5rem);
+  line-height: 1.05;
+  color: var(--block-heading-color);
+}
+
+.body {
+  margin: 0 0 var(--space-md);
+  font-family: var(--font-body);
+  font-size: clamp(0.95rem, 0.3vw + 0.85rem, 1.05rem);
+  line-height: 1.6;
+  color: var(--block-body-color);
+}
+
+.signature {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-weight: 600;
+  font-size: clamp(0.75rem, 0.3vw + 0.68rem, 0.85rem);
+  letter-spacing: 0.08em;
+  color: var(--block-signature-color);
+}
+
+/* ---------- Positionnement des blocs : mobile portrait (base) ---------- */
+/* Rapprochés dans le temps (la traversée dure ~1,3 s), pas juxtaposés sur
+   des écrans différents : ils restent empilés à l'écran, mais l'un est
+   toujours au moins partiellement visible pendant que l'autre se joue. */
+
+.block1 {
+  top: clamp(1.25rem, 5svh, 2.25rem);
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  text-align: center;
+  /* Visible dès journeyPhase = 0 ; seule l'entrée au montage (ci-dessous)
+     anime depuis opacity 0, la révélation liée à la phase prend le relais. */
+  opacity: 1;
+}
+
+.block2 {
+  bottom: clamp(1.25rem, 5svh, 2.25rem);
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  text-align: center;
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+}
+
+/* Entrée sobre du bloc 1, jouée une seule fois au montage (indépendante de
+   la phase) : opacité, léger déplacement vertical, blur léger. `backwards`
+   maintient l'état de départ pendant le délai puis rend la main au style
+   inline piloté par journeyPhase une fois l'animation terminée — jamais de
+   conflit avec les mises à jour ultérieures de `textReveal.ts`. */
+@media (prefers-reduced-motion: no-preference) {
+  .block1 {
+    animation-name: wj-block1-enter;
+    animation-duration: 720ms;
+    animation-timing-function: cubic-bezier(0.16, 0.9, 0.2, 1);
+    animation-delay: 120ms;
+    animation-fill-mode: backwards;
+  }
+}
+
+@keyframes wj-block1-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -24px, 0);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+  }
+}
+
+/* ---------- Tablette ---------- */
+
+@media (min-width: 640px) {
+  .section {
+    min-height: 155svh;
+  }
+
+  .block {
+    max-width: min(24rem, 58vw);
+  }
+
+  .title {
+    font-size: clamp(2.4rem, 3.6vw + 1.1rem, 3.4rem);
+  }
+
+  /* Le minimum du clamp reste assez haut (4.5rem) pour toujours dégager le
+     header fixe, y compris en paysage mobile bas (390px de hauteur) où ce
+     palier s'applique déjà. Renforce aussi le bloc 1 à cet endroit : fond
+     dégradé le plus contrasté possible via l'ordre des halos ci-dessus. */
+  .block1 {
+    top: clamp(4.5rem, 8svh, 5.5rem);
+    left: auto;
+    right: clamp(1.5rem, 5vw, 3rem);
+    margin-inline: 0;
+    text-align: right;
+  }
+
+  .block2 {
+    bottom: clamp(1.5rem, 8svh, 3.5rem);
+    top: auto;
+    left: clamp(1.5rem, 5vw, 3rem);
+    right: auto;
+    margin-inline: 0;
+    text-align: left;
+  }
+}
+
+/* ---------- Desktop ---------- */
+
+@media (min-width: 1024px) {
+  .section {
+    min-height: 165svh;
+  }
+
+  /* Même système pour les deux blocs : largeur ample commune, plafonnée
+     entre 880 et 920px. */
+  .block {
+    max-width: min(920px, 48vw);
+  }
+
+  .title {
+    font-size: clamp(3.8rem, 4.5vw, 6.2rem);
+    line-height: 0.98;
+    text-wrap: balance;
+  }
+
+  .body {
+    font-size: clamp(1.1rem, 0.4vw + 1rem, 1.25rem);
+    /* Le bloc est large (titre/signature en pleine largeur), mais le
+       paragraphe garde une mesure de lecture confortable plutôt que de
+       s'étirer sur toute la largeur du bloc. */
+    max-width: 64ch;
+    margin-bottom: 20px;
+  }
+
+  .signature {
+    white-space: nowrap;
+  }
+
+  /* Bloc 1 (validé) : empilement simple (surtitre, titre, paragraphe,
+     signature — plus de grille 65/35), centré verticalement dans le
+     tableau puis remonté d'environ 100px pour rapprocher le centre
+     optique du texte de celui de la roue. `top/bottom auto` centre sans
+     jamais toucher `transform`, propriété réservée à la révélation
+     pilotée par journeyPhase (textReveal.ts) ; `translate` est un
+     raccourci CSS distinct qui compose avec lui sans jamais l'écraser.
+     Posé sur la portion claire (écume/blanc cassé) du décor — texte clair
+     validé, isolé ici (desktop, .block1 uniquement). */
+  .block1 {
+    top: 0;
+    bottom: 0;
+    height: fit-content;
+    margin-block: auto;
+    margin-inline: 0;
+    text-align: left;
+    translate: 0 clamp(-7rem, -9.3vh, -5.5rem);
+    left: 47%;
+    right: 6vw;
+    --block-heading-color: #f4f8fa;
+    --block-body-color: #d5e5eb;
+    --block-eyebrow-color: #72d4f3;
+    --block-signature-color: #7bcf89;
+  }
+
+  .block1 .title {
+    text-shadow: 0 2px 18px rgba(4, 10, 16, 0.35);
+  }
+
+  /* Bloc 2 : remis dans son état précédent, validé — le bloc 1 est seul à
+     utiliser le nouveau système large/remonté pour l'instant. Redéclare
+     explicitement par-dessus les règles partagées (.block/.title/.body/
+     .signature) ci-dessus, qui visent désormais le bloc 1. */
+  .block2 {
+    top: auto;
+    bottom: clamp(3rem, 14svh, 6rem);
+    left: clamp(3rem, 7vw, 6rem);
+    right: auto;
+    height: auto;
+    margin-block: 0;
+    /* Décalage demandé de 200px vers la droite. Sûr ici : le bloc reste
+       loin du bord droit et de la roue (contrairement au bloc 1, où ce
+       même décalage sortait le texte du cadre visible). */
+    translate: 200px 0;
+    max-width: min(32rem, 36vw);
+  }
+
+  .block2 .title {
+    font-size: clamp(3.25rem, 4.8vw, 6rem);
+    line-height: 1.05;
+    text-wrap: wrap;
+  }
+
+  .block2 .body {
+    max-width: none;
+    margin-bottom: var(--space-md);
+  }
+
+  .block2 .signature {
+    white-space: normal;
+  }
+}
+
+/* ---------- Mouvement réduit : composition statique, roue trois-quarts ---------- */
+
+.section[data-motion='reduced'] {
+  min-height: 0;
+}
+
+.section[data-motion='reduced'] .scene {
+  position: relative;
+  top: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xl);
+  padding-block: var(--space-2xl);
+}
+
+.section[data-motion='reduced'] .canvasLayer {
+  position: relative;
+  z-index: 0;
+  inset: auto;
+  min-height: 46svh;
+  order: 2;
+}
+
+/* Ordre visuel : bloc 1, roue trois-quarts, bloc 2 — la roue devient un
+   centre de composition statique entre les deux prises de parole. */
+.section[data-motion='reduced'] .block1 {
+  order: 1;
+}
+
+.section[data-motion='reduced'] .block2 {
+  order: 3;
+}
+
+.section[data-motion='reduced'] .approachHalo {
+  display: none;
+}
+
+.section[data-motion='reduced'] .block {
+  position: static;
+  z-index: auto;
+  max-width: min(34rem, 88vw);
+  margin-inline: auto;
+  opacity: 1;
+  transform: none;
+  filter: none;
+  text-align: center;
+  animation: none;
+}
