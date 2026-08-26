@@ -1,5 +1,12 @@
 @import './tokens.css';
 
+:root {
+  /* Empêche l'Auto Dark Theme de Chrome Android de réassombrir les
+     sections claires du site : la palette est déjà pensée en alternance
+     clair/sombre, jamais en mode sombre système. */
+  color-scheme: only light;
+}
+
 *,
 *::before,
 *::after {
